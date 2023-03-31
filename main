@@ -1,12 +1,14 @@
-f = open('99322003-20221120.txt','r')
+f = open('99383003-20230307.txt','r')
 data = f.readlines()
-k = 0
+j = 0      # số giao dịch thành công
+k = 0      # dòng giao dịch thành công
 for i in data:
     k = k+1
-    if ('Stored banknote' in i) == True:
-        print(i)
-        print(data[k])
-        print(data[k+1])
+    if (('Stored banknote :' in i) == True) or (('in cassette : Succeeded' in i) == True):
+        j = j + 1
+        print('dòng thứ:', k, '   stt:', j)
+        print(i[0:(len(i)-1)])
+        print(data[k][0:(len(data[k])-1)])
+        print(data[k+1][0:(len(data[k+1])-1)])
         print(data[k+2])
-        print(k)
 f.close()
