@@ -10,4 +10,4 @@ for i in data:
         print(data[k+2])
         print(k)
 f.close()
-
+abcd
