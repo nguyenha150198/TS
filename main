@@ -1,0 +1,12 @@
+f = open('99322003-20221120.txt','r')
+data = f.readlines()
+k = 0
+for i in data:
+    k = k+1
+    if ('Stored banknote' in i) == True:
+        print(i)
+        print(data[k])
+        print(data[k+1])
+        print(data[k+2])
+        print(k)
+f.close()
