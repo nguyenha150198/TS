@@ -1,0 +1,26 @@
+f = open('99383003-20230307.txt','r')
+data = f.readlines()
+j = -1
+DS = []
+for i in data:
+    if (('==>' in i) == True):
+        j = j + 1
+        DS.append([])
+    if i != ('             TransactionEnd\n'):
+        DS[j].append(i[0:(len(i)-1)])
+f.close()
+#print(DS)
+
+k = 0
+for d in DS:       #lay tuwng giao dich
+    k = k+1
+    for l in d:    # doc tung dong cua giao dich
+        if (('Machine Sequence No' in l) == True):         # lay Machine Sequence No
+            MSN = l[-6:]
+        if (('DATA INPUT' in d[4])== True):
+            CARD_NO = d[5][4:]
+        if (('Card Number'in l)==True):
+            CARD_NO = l[27:]
+        #if (('CARD NO' in l)==True):
+        #    CARD_NO = l[10:]
+    print('GD:',k,'  MSN:',MSN,'  Card-No/Data-Input:',CARD_NO)
