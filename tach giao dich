@@ -1,63 +1,70 @@
-import pandas as pd
-f = open('99322003-20221120.txt','r')
+f = open('99383003-20230307.txt','r')
 data = f.readlines()
-j = -1
-DS = [[]]
-CARD_NO = []
-card_no = 0
+s = 0
+e = 0
+DS_Dong = []
+DS = []
+sttDS_Dong = -1
+sttDS = -1
+k = 0
 m = 0
-Menh_Gia_1 = []
-menh_gia_1 = 0
-Menh_Gia_2 = []
-menh_gia_2 = 0
-Counter = []
-counter = 0
-Loai_GD = []
-loai_gd = 0
-MSN = []
-msn = 0
-for i in data:
-    if (('==>' in i) == True):
-        j = j + 1
-        DS.append([])
-    if i != ('             TransactionEnd\n'):
-        DS[j].append(i[0:(len(i)-1)])
+DS1 = []   #thong tin trong tung giao dich
+Loai_GD = 0
+Menh_gia_1 = 0
+Menh_gia_2 = 0
+Counter = 0
+for i in data:          # lay stt dong start va end
+    s=s+1
+    e=e+1
+    if (('Transaction Start' in i )==True):
+        DS_Dong.append([])
+        sttDS_Dong = sttDS_Dong+1
+        DS_Dong[sttDS_Dong].append(s)
+    if(('Transaction End'in i)==True):
+        DS_Dong[sttDS_Dong].append(e)
+#print(len(DS_Dong[0]))
+
+for ds in DS_Dong:             # tach tung giao dich vao list
+    sttDS = sttDS+1
+    if (len(ds) == 2):
+        SoBatDau = ds[0]
+        SoKetThuc = ds[1]
+        for SoBatDau in range((SoBatDau-1),SoKetThuc):
+            DS.append([])
+            DS[sttDS].append(data[SoBatDau][0:(len(data[SoBatDau])-1)])
 f.close()
 #print(DS)
-k = 0
+
+
 for d in DS:       #lay tuwng giao dich
     k = k+1
     for l in d:    # doc tung dong cua giao dich
         m = m+1
         if (('Machine Sequence No' in l) == True):         # lay Machine Sequence No
-            msn = l[-6:]
-
-        if (('DATA INPUT' in d[4])== True):                # lay Data Input
-            card_no = d[5][4:]
-
-        if (('Card Number'in l)==True):                    # lay Card No
-            card_no = l[27:]
-
-        if (('Stored banknote :' in l) == True):
-            loai_gd='nop_tien'
-
-            menh_gia_1 = d[m]
-
-            menh_gia_2 = d[m+1]
-
-            counter = d[m+2]
-
+            MSN = l[-6:]
+        if (('DATA INPUT' in d[4])== True):
+            CARD_NO = d[5][4:]
+        if (('Card Number'in l)==True):
+            CARD_NO = l[27:]
+        if (('Stored banknote :' in l)==True):
+            Loai_GD = 'nop tien'
+            Menh_gia_1 = d[m]
+            Menh_gia_2 = d[m+1]
+            Counter = d[m+2]
+            print(k, MSN, CARD_NO, Loai_GD, Menh_gia_1,Menh_gia_2, Counter)
         if (('in cassette : Succeeded' in l) == True):
-            loai_gd = 'rut_tien'
-
-            menh_gia_1 = d[m]
-
-            counter = d[m + 1]
-
-            #print(Loai_GD,Menh_Gia_1,Menh_Gia_2,Counter)
+            Loai_GD = 'rut tien'
+            Menh_Gia_1 = d[m]
+            Menh_gia_2 = d[m + 1]
+            Counter = d[m + 2]
+            print(k, MSN, CARD_NO, Loai_GD, Menh_Gia_1,Menh_gia_2, Counter)
         if (('Transaction End' in l)== True):
             m = 0
-    #print(k,msn,card_no,loai_gd,menh_gia_1,menh_gia_2,counter)
-df = pd.DataFrame([msn, card_no, loai_gd,menh_gia_1,menh_gia_2,counter],
+            Loai_GD = 0
+            Menh_Gia_1 = 0
+            Menh_Gia_2 = 0
+            Counter = 0
+
+"""df = pd.DataFrame([msn, card_no, loai_gd,menh_gia_1,menh_gia_2,counter],
                       index=None, columns=None)
-df.to_excel('data.xlsx', sheet_name='new_sheet_name')
+df.to_excel('data.xlsx', sheet_name='new_sheet_name')"""
