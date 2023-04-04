@@ -1,4 +1,4 @@
-f = open('99383003-20230307.txt','r')
+f = open('99322003-20221120.txt','r')
 data = f.readlines()
 s = 0
 e = 0
@@ -8,11 +8,11 @@ sttDS_Dong = -1
 sttDS = -1
 k = 0
 m = 0
-DS1 = []   #thong tin trong tung giao dich
 Loai_GD = 0
 Menh_gia_1 = 0
 Menh_gia_2 = 0
 Counter = 0
+DS_GD = []
 for i in data:          # lay stt dong start va end
     s=s+1
     e=e+1
@@ -37,33 +37,51 @@ f.close()
 
 
 for d in DS:       #lay tuwng giao dich
+    DS_GD.append([])
     k = k+1
     for l in d:    # doc tung dong cua giao dich
         m = m+1
         if (('Machine Sequence No' in l) == True):         # lay Machine Sequence No
             MSN = l[-6:]
+            DS_GD[k-1].append(MSN)
         if (('DATA INPUT' in d[4])== True):
             CARD_NO = d[5][4:]
+            DS_GD[k-1].append(CARD_NO)
         if (('Card Number'in l)==True):
             CARD_NO = l[27:]
+            DS_GD[k-1].append(CARD_NO)
         if (('Stored banknote :' in l)==True):
             Loai_GD = 'nop tien'
             Menh_gia_1 = d[m]
             Menh_gia_2 = d[m+1]
             Counter = d[m+2]
-            print(k, MSN, CARD_NO, Loai_GD, Menh_gia_1,Menh_gia_2, Counter)
+            DS_GD[k-1].append(Loai_GD)
+            DS_GD[k - 1].append(Menh_gia_1)
+            DS_GD[k - 1].append(Menh_gia_2)
+            DS_GD[k-1].append(Counter)
+            #print(k, MSN, CARD_NO, Loai_GD, Menh_gia_1,Menh_gia_2, Counter)
         if (('in cassette : Succeeded' in l) == True):
             Loai_GD = 'rut tien'
-            Menh_Gia_1 = d[m]
+            Menh_gia_1 = d[m]
             Menh_gia_2 = d[m + 1]
             Counter = d[m + 2]
-            print(k, MSN, CARD_NO, Loai_GD, Menh_Gia_1,Menh_gia_2, Counter)
+            DS_GD[k - 1].append(Loai_GD)
+            DS_GD[k - 1].append(Menh_gia_1)
+            DS_GD[k - 1].append(Menh_gia_2)
+            DS_GD[k - 1].append(Counter)
+            #DS_GD[k - 1] = list(dict.fromkeys(DS_GD[k - 1]))
+            #print(k, MSN, CARD_NO, Loai_GD, Menh_gia_1,Menh_gia_2, Counter)
         if (('Transaction End' in l)== True):
             m = 0
             Loai_GD = 0
-            Menh_Gia_1 = 0
-            Menh_Gia_2 = 0
+            Menh_gia_1 = 0
+            Menh_gia_2 = 0
             Counter = 0
+
+for gd in range(k):
+    DS_GD[gd - 1] = list(dict.fromkeys(DS_GD[gd - 1]))
+DS_GD1 = DS_GD[:len(DS_Dong)]
+print(DS_GD1)
 
 """df = pd.DataFrame([msn, card_no, loai_gd,menh_gia_1,menh_gia_2,counter],
                       index=None, columns=None)
