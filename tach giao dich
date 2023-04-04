@@ -1,4 +1,6 @@
-f = open('99322003-20221120.txt','r')
+import pandas as pd
+import openpyxl
+f = open('99383003-20230307.txt','r')
 data = f.readlines()
 s = 0
 e = 0
@@ -44,8 +46,8 @@ for d in DS:       #lay tuwng giao dich
         if (('Machine Sequence No' in l) == True):         # lay Machine Sequence No
             MSN = l[-6:]
             DS_GD[k-1].append(MSN)
-        if (('DATA INPUT' in l)== True):
-            CARD_NO = d[4][4:]
+        if ((('DATA INPUT' in l)== True) and (m < 10)):
+            CARD_NO = 'NoneCard'
             DS_GD[k-1].append(CARD_NO)
         if (('Card Number'in l)==True):
             CARD_NO = l[27:]
@@ -69,8 +71,6 @@ for d in DS:       #lay tuwng giao dich
             DS_GD[k - 1].append(Menh_gia_1)
             DS_GD[k - 1].append(Menh_gia_2)
             DS_GD[k - 1].append(Counter)
-            #DS_GD[k - 1] = list(dict.fromkeys(DS_GD[k - 1]))
-            #print(k, MSN, CARD_NO, Loai_GD, Menh_gia_1,Menh_gia_2, Counter)
         if (('Transaction End' in l)== True):
             m = 0
             Loai_GD = 0
@@ -82,9 +82,13 @@ for d in DS:       #lay tuwng giao dich
 
 for gd in range(k):
     DS_GD[gd - 1] = list(dict.fromkeys(DS_GD[gd - 1]))
-DS_GD1 = DS_GD[:len(DS_Dong)]
-print(DS_GD1)
+DS_GD1 = DS_GD[:(len(DS_Dong)-1)]
 
-"""df = pd.DataFrame([msn, card_no, loai_gd,menh_gia_1,menh_gia_2,counter],
-                      index=None, columns=None)
-df.to_excel('data.xlsx', sheet_name='new_sheet_name')"""
+df = pd.DataFrame([['MSN','Card No','Loai GD','Menh Gia','Menh Gia','Counter']])
+for i in range(len(DS_GD1)):
+    df_new_row = pd.DataFrame([DS_GD1[i]])
+    df = pd.concat([df, df_new_row])
+df.to_excel('data.xlsx', sheet_name='new_sheet')
+
+
+
