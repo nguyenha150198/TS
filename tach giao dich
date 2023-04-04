@@ -44,8 +44,8 @@ for d in DS:       #lay tuwng giao dich
         if (('Machine Sequence No' in l) == True):         # lay Machine Sequence No
             MSN = l[-6:]
             DS_GD[k-1].append(MSN)
-        if (('DATA INPUT' in d[4])== True):
-            CARD_NO = d[5][4:]
+        if (('DATA INPUT' in l)== True):
+            CARD_NO = d[4][4:]
             DS_GD[k-1].append(CARD_NO)
         if (('Card Number'in l)==True):
             CARD_NO = l[27:]
@@ -77,6 +77,8 @@ for d in DS:       #lay tuwng giao dich
             Menh_gia_1 = 0
             Menh_gia_2 = 0
             Counter = 0
+            CARD_NO = 0
+            MSN = 0
 
 for gd in range(k):
     DS_GD[gd - 1] = list(dict.fromkeys(DS_GD[gd - 1]))
