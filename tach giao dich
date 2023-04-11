@@ -1,65 +1,68 @@
 import pandas as pd
 import openpyxl
-f = open('99383003-20230307.txt','r')
+
+f = open('99383003-20230307.txt', 'r')
 data = f.readlines()
-s = 0
-e = 0
 DS_Dong = []
 DS = []
 sttDS_Dong = -1
 sttDS = -1
 k = 0
 m = 0
+s = 0
+e = 0
 Loai_GD = 0
 Menh_gia_1 = 0
 Menh_gia_2 = 0
 Counter = 0
 DS_GD = []
-for i in data:          # lay stt dong start va end
-    s=s+1
-    e=e+1
-    if (('Transaction Start' in i )==True):
+for i in data:  # lấy STT dòng Start và End
+    s = s + 1
+    e = e + 1
+    if (('Transaction Start' in i) == True):
         DS_Dong.append([])
-        sttDS_Dong = sttDS_Dong+1
+        sttDS_Dong = sttDS_Dong + 1
         DS_Dong[sttDS_Dong].append(s)
-    if(('Transaction End'in i)==True):
+    if (('Transaction End' in i) == True):
         DS_Dong[sttDS_Dong].append(e)
-#print(len(DS_Dong[0]))
 
-for ds in DS_Dong:             # tach tung giao dich vao list
-    sttDS = sttDS+1
+for ds in DS_Dong:  # tách từng giao dịch vào list
+    sttDS = sttDS + 1
     if (len(ds) == 2):
         SoBatDau = ds[0]
         SoKetThuc = ds[1]
-        for SoBatDau in range((SoBatDau-1),SoKetThuc):
+        for SoBatDau in range((SoBatDau - 1), SoKetThuc):
             DS.append([])
-            DS[sttDS].append(data[SoBatDau][0:(len(data[SoBatDau])-1)])
+            DS[sttDS].append(data[SoBatDau])
 f.close()
-#print(DS)
 
+for d in DS:  # đọc từng giao dịch
+    DS_GD.append(['', ''])
+    k = k + 1
+    for l in d:  # tìm ra GD dùng thẻ và hiển thị số thẻ
+        if ((('Card Number :' in l) == True)):
+            CARD_NO = l[27:-1]
+            DS_GD[k - 1][1] = CARD_NO
+            break
 
-for d in DS:       #lay tuwng giao dich
-    DS_GD.append([])
-    k = k+1
-    for l in d:    # doc tung dong cua giao dich
-        m = m+1
-        if (('Machine Sequence No' in l) == True):         # lay Machine Sequence No
-            MSN = l[-6:]
-            DS_GD[k-1].append(MSN)
+    for l in d:  # tìm ra giao dịch không dùng thẻ
+        if ((('Non Card Transaction' in l) == True)):
+            CARD_NO = 'Non Card Transaction'
+            DS_GD[k - 1][1] = CARD_NO
+            break
 
-        if ((('DATA INPUT' in l) == True) and (m < 10)):
-            CARD_NO = 'NoneCard'
-            DS_GD[k - 1].append(CARD_NO)
-        '''if (('Card Number' in l) == True):
-            CARD_NO = l[27:]
-            DS_GD[k - 1].append(CARD_NO)
-'''
-        if (('Stored banknote :' in l)==True):
+    for l in d:
+        m = m + 1
+        if (('Machine Sequence No' in l) == True):  # lay Machine Sequence No
+            MSN = (l[-7:-1])
+            DS_GD[k - 1][0] = int(MSN)
+
+        if (('Stored banknote :\n' in l) == True):  # nộp tiền thành công
             Loai_GD = 'nộp tiền'
             Menh_gia_1 = d[m]
-            Menh_gia_2 = d[m+1]
-            Counter = d[m+2]
-            DS_GD[k-1].append(Loai_GD)
+            Menh_gia_2 = d[m + 1]
+            Counter = d[m + 2]
+            DS_GD[k - 1].append(Loai_GD)
             DS_GD[k - 1].append(int(Menh_gia_1[14:19]))
             DS_GD[k - 1].append(int(Menh_gia_1[29:34]))
             DS_GD[k - 1].append(int(Menh_gia_1[44:]))
@@ -67,9 +70,9 @@ for d in DS:       #lay tuwng giao dich
             DS_GD[k - 1].append(int(Menh_gia_2[29:34]))
             DS_GD[k - 1].append(int(Menh_gia_2[44:]))
             DS_GD[k - 1].append('')
-            DS_GD[k-1].append(Counter)
-            #print(k, MSN, CARD_NO, Loai_GD, Menh_gia_1,Menh_gia_2, Counter)
-        if (('in cassette : Succeeded' in l) == True):
+            DS_GD[k - 1].append(Counter)
+
+        if (('in cassette : Succeeded' in l) == True):  # GD rút tiền thành công
             Loai_GD = 'rút tiền'
             Menh_gia_1 = d[m]
             Menh_gia_2 = d[m + 1]
@@ -78,12 +81,17 @@ for d in DS:       #lay tuwng giao dich
             DS_GD[k - 1].append('')
             DS_GD[k - 1].append('')
             DS_GD[k - 1].append('')
-            DS_GD[k - 1].append(-(int(Menh_gia_1[14:19])))
-            DS_GD[k - 1].append(-(int(Menh_gia_1[29:34])))
-            DS_GD[k - 1].append(-(int(Menh_gia_1[44:])))
+            DS_GD[k - 1].append(int(Menh_gia_1[14:19]))
+            DS_GD[k - 1].append(int(Menh_gia_1[29:34]))
+            DS_GD[k - 1].append(int(Menh_gia_1[44:]))
             DS_GD[k - 1].append(int(Menh_gia_2[14:]))
             DS_GD[k - 1].append(Counter)
-        if (('Transaction End' in l)== True):
+
+        if (('False' in l) == True):
+            Loai_GD = 'False'
+            DS_GD[k - 1].append(Loai_GD)
+
+        if (('Transaction End' in l) == True):  # Kết thúc giao dịch
             m = 0
             Loai_GD = 0
             Menh_gia_1 = 0
@@ -92,15 +100,11 @@ for d in DS:       #lay tuwng giao dich
             CARD_NO = 0
             MSN = 0
 
-'''for gd in range(k):
-    DS_GD[gd - 1] = list(dict.fromkeys(DS_GD[gd - 1]))'''
-DS_GD1 = DS_GD[:(len(DS_Dong)-1)]
+DS_GD1 = DS_GD[:(len(DS_Dong))]
 
-df = pd.DataFrame([['MSN','Card No','Loại GD','10k','20k','50k','100k','200k','500k','Reject','Counter']])
-for i in range(len(DS_GD1)):
+df = pd.DataFrame([['MSN', 'Card No', 'Loại GD', '10k', '20k',
+                    '50k', '100k', '200k', '500k', 'Reject', 'Counter']])
+for i in range(len(DS_GD1)):  # đưa danh sách GD vào DataFrame
     df_new_row = pd.DataFrame([DS_GD1[i]])
     df = pd.concat([df, df_new_row])
-df.to_excel('data.xlsx', sheet_name='new_sheet')
-
-
-
+df.to_excel('data.xlsx', sheet_name='danh sách GD')  # thống kê tất cả các giao dịch vào Sheet1
