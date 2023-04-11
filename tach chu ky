@@ -1,46 +1,37 @@
 f1 = open('99371021-20230315.txt','r')
 data1 = f1.readlines()
 f1.close()
-
 f2 = open('99371021-20230316.txt','r')
 data2 = f2.readlines()
 f2.close()
-
 f3 = open('99371021-20230317.txt','r')
 data3 = f3.readlines()
 f3.close()
-
 f4 = open('99371021-20230318.txt','r')
 data4 = f4.readlines()
 f4.close()
-
 f5 = open('99371021-20230319.txt','r')
 data5 = f5.readlines()
 f5.close()
-
 f6 = open('99371021-20230320.txt','r')
 data6 = f6.readlines()
 f6.close()
-
 f7 = open('99371021-20230321.txt','r')
 data7 = f7.readlines()
 f7.close()
-
 f8 = open('99371021-20230322.txt','r')
 data8 = f8.readlines()
 f8.close()
-
 f9 = open('99371021-20230323.txt','r')
 data9 = f9.readlines()
 f9.close()
-
 data = data1+data2+data3+data4+data5+data6+data7+data8+data9
-
 dong_Settlement = 0
 DS_Settlement = [[1,'0']]
 sttDS_Settlement = -1
 list_CK = []
 k = 0
+stt_CK = -1
 for i in data:
     dong_Settlement = dong_Settlement+1
     k = k+1
@@ -50,5 +41,14 @@ for i in data:
         DS_Settlement[sttDS_Settlement][1]=dong_Settlement
         DS_Settlement[(sttDS_Settlement+1)][0] = dong_Settlement
 DS_Settlement[(len(DS_Settlement)-1)][1] = k
+
+for l in DS_Settlement:
+    stt_CK = stt_CK+1
+    start_of_Standar = l[0]
+    end_of_standar = l[1]
+    for start_of_Standar in range((start_of_Standar-1),(end_of_standar-1)):
+        list_CK.append([])
+        list_CK[stt_CK].append(data[start_of_Standar])
 print(DS_Settlement)
+print(list_CK[2][0:10])
 
