@@ -1,3 +1,7 @@
+import pandas as pd
+import openpyxl
+
+
 f1 = open('99371021-20230315.txt','r')
 data1 = f1.readlines()
 f1.close()
@@ -26,12 +30,14 @@ f9 = open('99371021-20230323.txt','r')
 data9 = f9.readlines()
 f9.close()
 data = data1+data2+data3+data4+data5+data6+data7+data8+data9
+
 dong_Settlement = 0
 DS_Settlement = [[1,'0']]
 sttDS_Settlement = -1
 list_CK = []
 k = 0
 stt_CK = -1
+
 for i in data:
     dong_Settlement = dong_Settlement+1
     k = k+1
@@ -42,13 +48,42 @@ for i in data:
         DS_Settlement[(sttDS_Settlement+1)][0] = dong_Settlement
 DS_Settlement[(len(DS_Settlement)-1)][1] = k
 
-for l in DS_Settlement:
+for i in range(0,len(DS_Settlement)):
+    list_CK.append([])
+
+for t in DS_Settlement:
     stt_CK = stt_CK+1
-    start_of_Standar = l[0]
-    end_of_standar = l[1]
+    start_of_Standar = t[0]
+    end_of_standar = t[1]
     for start_of_Standar in range((start_of_Standar-1),(end_of_standar-1)):
-        list_CK.append([])
         list_CK[stt_CK].append(data[start_of_Standar])
-print(DS_Settlement)
-print(list_CK[2][0:10])
+
+#print(DS_Settlement)
+#print(list_CK)
+
+DS_Dong = []
+for i in range(0,len(DS_Settlement)):
+    DS_Dong.append([])
+print(DS_Dong)
+
+STT = -1
+s = 0
+e = 0
+
+for u in list_CK:
+    STT = STT+1
+    sttDS_Dong = -1
+    for i in u:  # lấy STT dòng Start và End
+        s = s + 1
+        e = e + 1
+        if (('Transaction Start' in i) == True):
+            DS_Dong[STT].append([])
+            sttDS_Dong = sttDS_Dong + 1
+            DS_Dong[STT][sttDS_Dong].append(s)
+        if (('Transaction End' in i) == True):
+            DS_Dong[STT][sttDS_Dong].append(e)
+
+#print(DS_Dong)
+#print(len(DS_Dong))
+
 
