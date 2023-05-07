@@ -1,36 +1,32 @@
 import pandas as pd
-import openpyxl
+import os
+
+# Folder Path
+path = r"C:\Users\HaNT\PycharmProjects\TraSoat\test"
+
+# Change the directory
+os.chdir(path)
+
+data = []
+def read_text_file(file_path):
+    with open(file_path, 'r') as f:
+        global data
+        data1 = f.readlines()
+        f.close()
+        data = data + data1
+        #print(data)
 
 
-f1 = open('99371021-20230315.txt','r')
-data1 = f1.readlines()
-f1.close()
-f2 = open('99371021-20230316.txt','r')
-data2 = f2.readlines()
-f2.close()
-f3 = open('99371021-20230317.txt','r')
-data3 = f3.readlines()
-f3.close()
-f4 = open('99371021-20230318.txt','r')
-data4 = f4.readlines()
-f4.close()
-f5 = open('99371021-20230319.txt','r')
-data5 = f5.readlines()
-f5.close()
-f6 = open('99371021-20230320.txt','r')
-data6 = f6.readlines()
-f6.close()
-f7 = open('99371021-20230321.txt','r')
-data7 = f7.readlines()
-f7.close()
-f8 = open('99371021-20230322.txt','r')
-data8 = f8.readlines()
-f8.close()
-f9 = open('99371021-20230323.txt','r')
-data9 = f9.readlines()
-f9.close()
-data = data1+data2+data3+data4+data5+data6+data7+data8+data9
+# iterate through all file
+for file in os.listdir():
+    # Check whether file is in text format or not
+    if file.endswith(".txt"):
+        file_path = f"{path}\{file}"
 
+        # call read text file function
+        read_text_file(file_path)
+
+#print(data)
 dong_Settlement = 0
 DS_Settlement = [[1,'0']]
 sttDS_Settlement = -1
@@ -188,7 +184,8 @@ for ds in DS:
 
 df = pd.DataFrame([['Chu kỳ','Thời gian bắt đầu GD','MSN', 'Card No', 'Loại GD', '10k', '20k',
                     '50k', '100k', '200k', '500k', 'Reject', 'Counter','collect banknote']])
+#print(DS_GD)
 for i in range(len(DS_GD)):                               # đưa danh sách GD vào DataFrame
     df_new_row = pd.DataFrame([DS_GD[i]])
     df = pd.concat([df, df_new_row])
-df.to_excel('data1.xlsx', sheet_name='danh sách GD')      # thống kê tất cả các giao dịch vào Sheet1
+df.to_excel('data2.xlsx', sheet_name='danh sách GD')      # thống kê tất cả các giao dịch vào Sheet1
