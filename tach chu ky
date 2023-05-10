@@ -134,6 +134,7 @@ for ds in DS:
 
             if (('Stored banknote :\n' in l) == True):  # nộp tiền thành công
                 Loai_GD = 'nộp tiền'
+                Trang_thai = 'Succeeded'
                 Menh_gia_1 = d[m]
                 Menh_gia_2 = d[m + 1]
                 Counter = d[m + 2]
@@ -146,9 +147,12 @@ for ds in DS:
                 DS_GD[k - 1].append(int(Menh_gia_2[44:]))
                 DS_GD[k - 1].append('')
                 DS_GD[k - 1].append(Counter)
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1][13] = (Trang_thai)
 
             if (('in cassette : Succeeded' in l) == True):  # GD rút tiền thành công
                 Loai_GD = 'rút tiền'
+                Trang_thai = 'Succeeded'
                 Menh_gia_1 = d[m]
                 Menh_gia_2 = d[m + 1]
                 Counter = d[m + 2]
@@ -161,14 +165,41 @@ for ds in DS:
                 DS_GD[k - 1].append(int(Menh_gia_1[44:]))
                 DS_GD[k - 1].append(int(Menh_gia_2[14:]))
                 DS_GD[k - 1].append(Counter)
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1][13] = (Trang_thai)
 
             if (('Error event: ' in l) == True):  # GD rút tiền k thành công
-                Loai_GD = 'False'
-                DS_GD[k - 1][4]=(Loai_GD)
+                Trang_thai = 'False'
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1][13]=(Trang_thai)
 
             if (('Failed' in l) == True):
-                Loai_GD = 'False'
-                DS_GD[k - 1][4]=(Loai_GD)
+                Trang_thai = 'False'
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1].append('')
+                DS_GD[k - 1][13]=(Trang_thai)
 
             if (('Transaction End' in l) == True):  # Kết thúc giao dịch
                 m = 0
@@ -180,10 +211,10 @@ for ds in DS:
                 MSN = 0
                 Collect = 0
                 Time = 0
-
+                Trang_thai = 0
 
 df = pd.DataFrame([['Chu kỳ','Thời gian bắt đầu GD','MSN', 'Card No', 'Loại GD', '10k', '20k',
-                    '50k', '100k', '200k', '500k', 'Reject', 'Counter','collect banknote']])
+                    '50k', '100k', '200k', '500k', 'Reject', 'Counter','Trạng thái']])
 #print(DS_GD)
 for i in range(len(DS_GD)):                               # đưa danh sách GD vào DataFrame
     df_new_row = pd.DataFrame([DS_GD[i]])
