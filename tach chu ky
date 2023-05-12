@@ -32,7 +32,17 @@ DS_Settlement = [[1,'0']]
 sttDS_Settlement = -1
 list_CK = []
 k1 = 0
+K2 = 0
 stt_CK = -1
+MG = 0
+
+for i in data:
+    K2 = K2+1
+    if (('---Settlement' in i) == True):
+        MG = data[K2 + 8][23:32]+data[K2 + 9][23:32]+data[K2 + 10][23:32]+data[K2 + 11][23:32]
+        print(MG)
+        break
+
 for i in data:
     dong_Settlement = dong_Settlement+1
     k1 = k1 + 1
