@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # Folder Path
-path = r"C:\Users\HaNT\PycharmProjects\TraSoat\test"
+path = r"C:\Users\HaNT\PycharmProjects\TraSoat\test1"
 
 # Change the directory
 os.chdir(path)
@@ -86,7 +86,6 @@ for U in list_CK:
         if (('Transaction End' in u) == True):
             DS_Dong[STT][sttDS_Dong].append(e)
 #print(DS_Dong)
-#print(len(DS_Dong))
 DS = []
 for i in range(0,len(DS_Settlement)):
     DS.append([])
@@ -97,12 +96,14 @@ for v in DS_Dong:         # đưa các giao dịch vào list
     sttDS = -1
     for ds in v:  # tách từng giao dịch vào list
         sttDS = sttDS + 1
+ #       print(sttDS)
         if (len(ds) == 2):
             SoBatDau = ds[0]
             SoKetThuc = ds[1]
             DS[STT1].append([])
             for SoBatDau in range((SoBatDau - 2), SoKetThuc):
                 DS[STT1][sttDS].append(data[SoBatDau])
+
 #print(DS[1][3])
 
 DS_GD = []
@@ -169,12 +170,31 @@ for ds in DS:
                 DS_GD[k - 1][4]=(Loai_GD)
                 DS_GD[k - 1].append('')
                 DS_GD[k - 1].append('')
-                DS_GD[k - 1].append('')
-                DS_GD[k - 1].append(int(Menh_gia_1[14:19]))
-                DS_GD[k - 1].append(int(Menh_gia_1[29:34]))
-                DS_GD[k - 1].append(int(Menh_gia_1[44:]))
-                DS_GD[k - 1].append(int(Menh_gia_2[14:]))
-                DS_GD[k - 1].append(Counter)
+                #DS_GD[k - 1].append('')
+                if (MG == 'VND500000VND500000VND200000VND100000'):
+                    DS_GD[k - 1].append('')                             #50k
+                    DS_GD[k - 1].append(int(Menh_gia_1[14:19]))         #100k
+                    DS_GD[k - 1].append(int(Menh_gia_1[29:34]))         #200k
+                    DS_GD[k - 1].append(int(Menh_gia_1[44:]))           #500k
+                    DS_GD[k - 1].append(int(Menh_gia_2[14:]))           #reject
+                    DS_GD[k - 1].append(Counter)
+
+                if (MG == 'VND500000VND500000VND500000VND200000'):
+                    DS_GD[k - 1].append('')                             #50k
+                    DS_GD[k - 1].append('')                             #100k
+                    DS_GD[k - 1].append(int(Menh_gia_1[14:19]))         #200k
+                    DS_GD[k - 1].append(int(Menh_gia_1[29:34]))         #500k
+                    DS_GD[k - 1].append(int(Menh_gia_1[44:]))           #reject
+                    DS_GD[k - 1].append(Menh_gia_2)                     #counter
+
+                if (MG == 'VND500000VND200000VND100000VND50000 '):
+                    DS_GD[k - 1].append(int(Menh_gia_1[14:19]))         #50k
+                    DS_GD[k - 1].append(int(Menh_gia_1[29:34]))         #100k
+                    DS_GD[k - 1].append(int(Menh_gia_1[44:]))           #200k
+                    DS_GD[k - 1].append(int(Menh_gia_2[14:19]))         #500k
+                    DS_GD[k - 1].append(int(Menh_gia_2[29:34]))         #reject
+                    DS_GD[k - 1].append(Counter)
+
                 DS_GD[k - 1].append('')
                 DS_GD[k - 1][13] = (Trang_thai)
 
