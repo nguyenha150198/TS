@@ -65,6 +65,14 @@ for t in DS_Settlement:                           # đưa các dòng trong mỗi
 
 #print(DS_Settlement)
 #print(list_CK[0])
+s1 = -1
+for i in list_CK[0]:
+    s1 = s1 + 1
+    if (('Transaction Start' in i) == True):          # lấy log từ dòng Tran Start đầu tiên
+        list_CK [0] = list_CK[0][(s1-1):]
+        break
+#print(list_CK[0])
+#print(len(list_CK))
 
 DS_Dong = []
 for i in range(0,len(DS_Settlement)):
@@ -73,6 +81,7 @@ for i in range(0,len(DS_Settlement)):
 STT = -1
 s = 0
 e = 0
+
 for U in list_CK:
     STT = STT+1
     sttDS_Dong = -1
@@ -257,7 +266,7 @@ for ds in DS:
                 DS_GD[k - 1].append('')
                 DS_GD[k - 1][13]=(Trang_thai)
 
-            if (('Failed' in l) == True):
+            if (('Fail' in l) == True):
                 Trang_thai = 'False'
                 DS_GD[k - 1].append('')
                 DS_GD[k - 1].append('')
