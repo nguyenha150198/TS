@@ -1,0 +1,1032 @@
+import pandas as pd
+import os
+import time
+import win32com.client
+import PySimpleGUI as sg
+import openpyxl
+
+hiddenimports=["PySimpleGUI","pandas","win32com.client"]
+
+sg.theme("GreenMono")
+tab1=[
+[sg.Text("Input Folder LogEJ: "),sg.Input(key="IN_TCB"),sg.FolderBrowse()],
+[sg.Button("RUN",key="RUN_TCB")]
+]
+
+tab2=[
+[sg.Text("Input Folder LogEJ: "),sg.Input(key="IN_MBB"),sg.FolderBrowse()],
+[sg.Button("RUN",key="RUN_MBB")]
+]
+
+tab3=[
+[sg.Text("Input Folder LogEJ: "),sg.Input(key="IN_VPB"),sg.FolderBrowse()],
+[sg.Button("RUN",key="RUN_VPB")]
+]
+
+layout = [[sg.TabGroup([
+   [sg.Tab('TCB', tab1),
+    sg.Tab('MBB', tab2),
+    sg.Tab('VPB',tab3)]])],
+]
+window = sg.Window("Cycle",layout)
+
+while True:
+
+ event,values = window.read()
+ if event == sg.WINDOW_CLOSED:
+     break
+
+ if (event == "RUN_TCB" and values["IN_TCB"] != ""):
+     Folder_Path_TCB = values["IN_TCB"]
+     if Folder_Path_TCB == '':
+         sg.popup_error("not yet path log folder")
+
+     os.chdir(Folder_Path_TCB)
+
+     data = []
+
+     def read_text_file(file_path):
+         with open(file_path, 'r') as f:
+             global data
+             data1 = f.readlines()
+             f.close()
+             data = data + data1
+             # print(data)
+
+
+     # iterate through all file
+     for file in os.listdir():
+         # Check whether file is in text format or not
+         if file.endswith(".txt"):
+             file_path = f"{Folder_Path_TCB}\{file}"
+
+             # call read text file function
+             read_text_file(file_path)
+
+     # print(data)
+     dong_Settlement = 0
+     DS_Settlement = [[1, '0']]
+     sttDS_Settlement = -1
+     list_CK = []
+     k1 = 0
+     K2 = 0
+     stt_CK = -1
+     MG = 0
+
+     for i in data:
+         K2 = K2 + 1
+         if (('---Settlement' in i) == True):
+             MG = data[K2 + 8][23:32] + data[K2 + 9][23:32] + data[K2 + 10][23:32] + data[K2 + 11][23:32]
+             print(MG)
+             break
+
+     for i in data:
+         dong_Settlement = dong_Settlement + 1
+         k1 = k1 + 1
+         if (('---Settlement' in i) == True):  # lay ra STT cac dong Settlement
+             DS_Settlement.append(['', ''])
+             sttDS_Settlement = sttDS_Settlement + 1
+             DS_Settlement[sttDS_Settlement][1] = dong_Settlement
+             DS_Settlement[(sttDS_Settlement + 1)][0] = dong_Settlement
+     DS_Settlement[(len(DS_Settlement) - 1)][1] = k1 + 1
+     # print(DS_Settlement)
+
+     for i in range(0, len(DS_Settlement)):
+         list_CK.append([])
+     for t in DS_Settlement:  # đưa các dòng trong mỗi chu kỳ vào 1 phần tử trong list
+         stt_CK = stt_CK + 1
+         start_of_Standar = t[0]
+         end_of_standar = t[1]
+         for start_of_Standar in range((start_of_Standar - 1), (end_of_standar - 1)):
+             list_CK[stt_CK].append(data[start_of_Standar])
+
+     # print(DS_Settlement)
+     # print(list_CK[0])
+     s1 = -1
+     for i in list_CK[0]:
+         s1 = s1 + 1
+         if (('Transaction Start' in i) == True):  # lấy log từ dòng Tran Start đầu tiên
+             list_CK[0] = list_CK[0][(s1 - 1):]
+             data = data[(s1 - 1):]
+             break
+     # print(list_CK[0])
+     # print(len(list_CK))
+
+     DS_Dong = []
+     for i in range(0, len(DS_Settlement)):
+         DS_Dong.append([])
+     # print(DS_Dong)
+     STT = -1
+     s = 0
+     e = 0
+
+     for U in list_CK:
+         STT = STT + 1
+         sttDS_Dong = -1
+         for u in U:  # lấy STT dòng Start transaction và End transaction
+             s = s + 1
+             e = e + 1
+             if (('Transaction Start' in u) == True):
+                 DS_Dong[STT].append(['', ''])
+                 sttDS_Dong = sttDS_Dong + 1
+                 DS_Dong[STT][sttDS_Dong][0] = s
+                 e1 = 0
+             if (('Transaction End' in u) == True):
+                 if e1 == 0:
+                     DS_Dong[STT][sttDS_Dong][1] = e
+                 e1 = e1 + 1
+                 if e1 == 2:
+                     DS_Dong[STT].append(['', ''])
+                     sttDS_Dong = sttDS_Dong + 1
+                     DS_Dong[STT][sttDS_Dong][0] = ''
+                     DS_Dong[STT][sttDS_Dong][1] = e
+
+     # print(DS_Dong)
+
+     if DS_Dong[-1][-1][1] == '':
+         DS_Dong[-1][-1][1] = e  # Nếu GD cuối cùng k có Tran End thì lấy dòng cuối cùng làm Tran End
+
+     # if DS_Dong[0][0][0] == '':
+
+     i1 = 0
+     j1 = 0
+     for i in DS_Dong:
+         i1 = i1 + 1
+         for j in i:
+             j1 = j1 + 1
+             if j[1] == '':
+                 DS_Dong[i1 - 1][j1 - 1][1] = DS_Dong[i1 - 1][j1][
+                                                  0] - 1  # nếu GD không có dòng Tran End thì lấy dòng Tran Start của GD sau đó làm Tran End
+             if j[0] == '':
+                 DS_Dong[i1 - 1][j1 - 1][0] = DS_Dong[i1 - 1][j1 - 2][1] + 1  # GD không có dong Tran Start
+
+             if j1 == len(DS_Dong[i1 - 1]):  # reset biến đếm j1 khi sang chu kỳ tiếp theo
+                 j1 = 0
+
+     # print(DS_Dong)
+
+     DS = []
+     for i in range(0, len(DS_Settlement)):
+         DS.append([])
+     # print(DS)
+     STT1 = -1
+     for v in DS_Dong:  # đưa các giao dịch vào list
+         STT1 = STT1 + 1
+         sttDS = -1
+         for ds in v:  # tách từng giao dịch vào list
+             sttDS = sttDS + 1
+             #        print(sttDS)
+             if (len(ds) == 2):
+                 #            print(ds)
+                 SoBatDau = ds[0]
+                 SoKetThuc = ds[1]
+                 DS[STT1].append([])
+                 #            print(ds)
+                 for SoBatDau in range((SoBatDau - 2), SoKetThuc):
+                     DS[STT1][sttDS].append(data[SoBatDau])
+     #           print(SoBatDau)
+
+     # print(DS[0][2])
+
+     DS_GD = []
+     Chu_Ky = 0
+     k = 0
+     m = 0
+     Loai_GD = 0
+     Menh_gia_1 = 0
+     Menh_gia_2 = 0
+     Counter = 0
+     Collect = 0
+     for ds in DS:
+         Chu_Ky = Chu_Ky + 1
+         for d in ds:  # đọc từng giao dịch
+             DS_GD.append(['', '', '', '', ''])
+             k = k + 1
+             DS_GD[k - 1][0] = Chu_Ky
+
+             for l in d:  # tìm ra GD dùng thẻ và hiển thị số thẻ
+
+                 if ((('Card Number :' in l) == True)):
+                     CARD_NO = l[27:-1]
+                     DS_GD[k - 1][3] = CARD_NO
+                     #              print(CARD_NO)
+                     break
+
+             for l in d:  # tìm ra giao dịch không dùng thẻ
+                 if ((('Non Card Transaction' in l) == True)):
+                     CARD_NO = 'Non Card Transaction'
+                     DS_GD[k - 1][3] = CARD_NO
+                     break
+
+             for l in d:
+                 m = m + 1
+
+                 if (('Machine Sequence No' in l) == True):  # lay Machine Sequence No
+                     MSN = l[-7:-1]
+                     Time = d[m - 3][3:24]
+                     DS_GD[k - 1][1] = Time
+                     DS_GD[k - 1][2] = int(MSN)
+                 #           print(MSN)
+                 #           print(Time)
+
+                 if (('Stored banknote :\n' in l) == True):  # nộp tiền thành công
+                     Loai_GD = 'nộp tiền'
+                     Trang_thai = 'Succeeded'
+                     Menh_gia_1 = d[m]
+                     Menh_gia_2 = d[m + 1]
+                     Counter = d[m + 2]
+                     DS_GD[k - 1][4] = Loai_GD
+                     DS_GD[k - 1].append(int(Menh_gia_1[14:19]))
+                     #       print(Menh_gia_1)
+                     DS_GD[k - 1].append(int(Menh_gia_1[29:34]))
+                     DS_GD[k - 1].append(int(Menh_gia_1[44:]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[14:19]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[29:34]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[44:]))
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append(Counter)
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 if (('in cassette : Succeeded' in l) == True):  # GD rút tiền thành công
+                     Loai_GD = 'rút tiền'
+                     Trang_thai = 'Succeeded'
+                     Menh_gia_1 = d[m]
+                     Menh_gia_2 = d[m + 1]
+                     Counter = d[m + 2]
+                     DS_GD[k - 1][4] = (Loai_GD)
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     # DS_GD[k - 1].append('')
+                     if (MG == 'VND500000VND500000VND200000VND100000'):
+                         DS_GD[k - 1].append('')  # 50k
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 100k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_2[14:]))  # reject
+                         DS_GD[k - 1].append(Counter)
+
+                     if (MG == 'VND500000VND500000VND500000VND200000'):
+                         DS_GD[k - 1].append('')  # 50k
+                         DS_GD[k - 1].append('')  # 100k
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # reject
+                         DS_GD[k - 1].append(Menh_gia_2)  # counter
+
+                     if (MG == 'VND500000VND200000VND100000VND50000 '):
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 50k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 100k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_2[14:19]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_2[29:34]))  # reject
+                         DS_GD[k - 1].append(Counter)
+
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 if (('Error event: ' in l) == True):  # GD rút tiền k thành công
+                     Trang_thai = 'False'
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 if (('Fail' in l) == True):
+                     Trang_thai = 'False'
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 # if (('Transaction End' in l) == True):  # Kết thúc giao dịch
+                 if m == len(d):  # Kết thúc giao dịch
+                     m = 0
+                     Loai_GD = 0
+                     Menh_gia_1 = 0
+                     Menh_gia_2 = 0
+                     Counter = 0
+                     CARD_NO = 0
+                     MSN = 0
+                     Collect = 0
+                     Time = 0
+                     Trang_thai = 0
+
+     df = pd.DataFrame([['Chu kỳ', 'Thời gian bắt đầu GD', 'MSN', 'Card No', 'Loại GD', '10k', '20k',
+                         '50k', '100k', '200k', '500k', 'Reject', 'Counter', 'Trạng thái']])
+     # print(DS_GD)
+     for i in range(len(DS_GD)):  # đưa danh sách GD vào DataFrame
+         df_new_row = pd.DataFrame([DS_GD[i]])
+         df = pd.concat([df, df_new_row])
+     # df.to_excel('data2.xlsx', sheet_name='danh sách GD')      # thống kê tất cả các giao dịch vào Sheet1
+
+     year = time.localtime().tm_year
+     mon = time.localtime().tm_mon
+     if (mon <= 9):
+         mon = "0" + str(mon)
+     day = time.localtime().tm_mday
+     if (day <= 9):
+         day = '0' + str(day)
+     hour = time.localtime().tm_hour
+     if (hour <= 9):
+         hour = "0" + str(hour)
+     min = time.localtime().tm_min
+     if (min <= 9):
+         min = "0" + str(min)
+     sec = time.localtime().tm_sec
+     if (sec <= 9):
+         sec = "0" + str(sec)
+     Time = str(day) + str(mon) + str(year) + "_" + str(hour) + str(min) + str(sec)
+
+     os.makedirs(r"D:\PTCK\TCB", exist_ok=True)
+     df.to_excel(r"D:\PTCK\TCB" + "/TCB_" + Time + ".xlsx")
+
+     fl = (r"D:\PTCK\TCB" + "/TCB_" + Time + ".xlsx")
+
+     xl = win32com.client.Dispatch("Excel.Application")
+     xl.Visible = True
+     xl.Workbooks.Open(fl)
+ if (event == "RUN_MBB" and values["IN_MBB"] != ""):
+     Folder_Path_MBB = values["IN_MBB"]
+
+     os.chdir(Folder_Path_MBB)
+
+     data = []
+
+
+     def read_text_file(file_path):
+         with open(file_path, 'r') as f:
+             global data
+             data1 = f.readlines()
+             f.close()
+             data = data + data1
+             # print(data)
+
+
+     # iterate through all file
+     for file in os.listdir():
+         # Check whether file is in text format or not
+         if file.endswith(".txt"):
+             file_path = f"{Folder_Path_MBB}\{file}"
+
+             # call read text file function
+             read_text_file(file_path)
+
+     # print(data)
+     dong_Settlement = 0
+     DS_Settlement = [[1, '0']]
+     sttDS_Settlement = -1
+     list_CK = []
+     k1 = 0
+     K2 = 0
+     stt_CK = -1
+     MG = 0
+
+     for i in data:
+         K2 = K2 + 1
+         if (('---Settlement' in i) == True):
+             MG = data[K2 + 8][23:32] + data[K2 + 9][23:32] + data[K2 + 10][23:32] + data[K2 + 11][23:32]
+             print(MG)
+             break
+
+     for i in data:
+         dong_Settlement = dong_Settlement + 1
+         k1 = k1 + 1
+         if (('---Settlement' in i) == True):  # lay ra STT cac dong Settlement
+             DS_Settlement.append(['', ''])
+             sttDS_Settlement = sttDS_Settlement + 1
+             DS_Settlement[sttDS_Settlement][1] = dong_Settlement
+             DS_Settlement[(sttDS_Settlement + 1)][0] = dong_Settlement
+     DS_Settlement[(len(DS_Settlement) - 1)][1] = k1 + 1
+     # print(DS_Settlement)
+
+     for i in range(0, len(DS_Settlement)):
+         list_CK.append([])
+     for t in DS_Settlement:  # đưa các dòng trong mỗi chu kỳ vào 1 phần tử trong list
+         stt_CK = stt_CK + 1
+         start_of_Standar = t[0]
+         end_of_standar = t[1]
+         for start_of_Standar in range((start_of_Standar - 1), (end_of_standar - 1)):
+             list_CK[stt_CK].append(data[start_of_Standar])
+
+     # print(DS_Settlement)
+     # print(list_CK[0])
+     s1 = -1
+     for i in list_CK[0]:
+         s1 = s1 + 1
+         if (('Transaction Start' in i) == True):  # lấy log từ dòng Tran Start đầu tiên
+             list_CK[0] = list_CK[0][(s1 - 1):]
+             data = data[(s1 - 1):]
+             break
+     # print(list_CK[0])
+     # print(len(list_CK))
+
+     DS_Dong = []
+     for i in range(0, len(DS_Settlement)):
+         DS_Dong.append([])
+     # print(DS_Dong)
+     STT = -1
+     s = 0
+     e = 0
+
+     for U in list_CK:
+         STT = STT + 1
+         sttDS_Dong = -1
+         for u in U:  # lấy STT dòng Start transaction và End transaction
+             s = s + 1
+             e = e + 1
+             if (('Transaction Start' in u) == True):
+                 DS_Dong[STT].append(['', ''])
+                 sttDS_Dong = sttDS_Dong + 1
+                 DS_Dong[STT][sttDS_Dong][0] = s
+                 e1 = 0
+             if (('Transaction End' in u) == True):
+                 if e1 == 0:
+                     DS_Dong[STT][sttDS_Dong][1] = e
+                 e1 = e1 + 1
+                 if e1 == 2:
+                     DS_Dong[STT].append(['', ''])
+                     sttDS_Dong = sttDS_Dong + 1
+                     DS_Dong[STT][sttDS_Dong][0] = ''
+                     DS_Dong[STT][sttDS_Dong][1] = e
+
+     # print(DS_Dong)
+
+     if DS_Dong[-1][-1][1] == '':
+         DS_Dong[-1][-1][1] = e  # Nếu GD cuối cùng k có Tran End thì lấy dòng cuối cùng làm Tran End
+
+     # if DS_Dong[0][0][0] == '':
+
+     i1 = 0
+     j1 = 0
+     for i in DS_Dong:
+         i1 = i1 + 1
+         for j in i:
+             j1 = j1 + 1
+             if j[1] == '':
+                 DS_Dong[i1 - 1][j1 - 1][1] = DS_Dong[i1 - 1][j1][
+                                                  0] - 1  # nếu GD không có dòng Tran End thì lấy dòng Tran Start của GD sau đó làm Tran End
+             if j[0] == '':
+                 DS_Dong[i1 - 1][j1 - 1][0] = DS_Dong[i1 - 1][j1 - 2][1] + 1  # GD không có dong Tran Start
+
+             if j1 == len(DS_Dong[i1 - 1]):  # reset biến đếm j1 khi sang chu kỳ tiếp theo
+                 j1 = 0
+
+     # print(DS_Dong)
+
+     DS = []
+     for i in range(0, len(DS_Settlement)):
+         DS.append([])
+     # print(DS)
+     STT1 = -1
+     for v in DS_Dong:  # đưa các giao dịch vào list
+         STT1 = STT1 + 1
+         sttDS = -1
+         for ds in v:  # tách từng giao dịch vào list
+             sttDS = sttDS + 1
+             #        print(sttDS)
+             if (len(ds) == 2):
+                 #            print(ds)
+                 SoBatDau = ds[0]
+                 SoKetThuc = ds[1]
+                 DS[STT1].append([])
+                 #            print(ds)
+                 for SoBatDau in range((SoBatDau - 2), SoKetThuc):
+                     DS[STT1][sttDS].append(data[SoBatDau])
+     #           print(SoBatDau)
+
+     # print(DS[0][2])
+
+     DS_GD = []
+     Chu_Ky = 0
+     k = 0
+     m = 0
+     Loai_GD = 0
+     Menh_gia_1 = 0
+     Menh_gia_2 = 0
+     Counter = 0
+     Collect = 0
+     for ds in DS:
+         Chu_Ky = Chu_Ky + 1
+         for d in ds:  # đọc từng giao dịch
+             DS_GD.append(['', '', '', '', ''])
+             k = k + 1
+             DS_GD[k - 1][0] = Chu_Ky
+             #       print(len(d))
+             for l in d:  # tìm ra GD dùng thẻ và hiển thị số thẻ
+
+                 if ((('Card Number :' in l) == True)):
+                     CARD_NO = l[27:-1]
+                     DS_GD[k - 1][3] = CARD_NO
+                     #              print(CARD_NO)
+                     break
+
+             for l in d:  # tìm ra giao dịch không dùng thẻ
+                 if ((('Non Card Transaction' in l) == True)):
+                     CARD_NO = 'Non Card Transaction'
+                     DS_GD[k - 1][3] = CARD_NO
+                     break
+
+             for l in d:
+                 m = m + 1
+
+                 if (('Machine Sequence No' in l) == True):  # lay Machine Sequence No
+                     MSN = l[-7:-1]
+                     Time = d[m - 3][3:24]
+                     DS_GD[k - 1][1] = Time
+                     DS_GD[k - 1][2] = int(MSN)
+                 #           print(MSN)
+                 #           print(Time)
+
+                 if (('Stored banknote :\n' in l) == True):  # nộp tiền thành công
+                     Loai_GD = 'nộp tiền'
+                     Trang_thai = 'Succeeded'
+                     Menh_gia_1 = d[m]
+                     Menh_gia_2 = d[m + 1]
+                     Counter = d[m + 2]
+                     DS_GD[k - 1][4] = Loai_GD
+                     DS_GD[k - 1].append(int(Menh_gia_1[14:19]))
+                     #       print(Menh_gia_1)
+                     DS_GD[k - 1].append(int(Menh_gia_1[29:34]))
+                     DS_GD[k - 1].append(int(Menh_gia_1[44:]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[14:19]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[29:34]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[44:]))
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append(Counter)
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 if (('in cassette : Succeeded' in l) == True):  # GD rút tiền thành công
+                     Loai_GD = 'rút tiền'
+                     Trang_thai = 'Succeeded'
+                     Menh_gia_1 = d[m]
+                     Menh_gia_2 = d[m + 1]
+                     Counter = d[m + 2]
+                     DS_GD[k - 1][4] = (Loai_GD)
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     # DS_GD[k - 1].append('')
+                     if (MG == 'VND500000VND200000VND50000 -        '):
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 50k
+                         DS_GD[k - 1].append('')  # 100k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_2[14:]))  # reject
+                         DS_GD[k - 1].append('')
+                         # DS_GD[k - 1].append(Counter)
+
+                     if (MG == 'VND500000VND200000VND100000VND50000 '):
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 50k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 100k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_2[14:19]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_2[29:34]))  # reject
+                         # DS_GD[k - 1].append(Counter)
+                         DS_GD[k - 1].append('')
+
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 if ((
+                             'banknote bucket : Succeeded' in l) == True) and Loai_GD == 'rút tiền':  # lấy counter của GD rút tiền
+                     Counter = d[m]
+                     DS_GD[k - 1][12] = Counter
+
+                 if (('Error event: ' in l) == True):  # GD rút tiền k thành công
+                     Trang_thai = 'False'
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 if (('Fail' in l) == True):
+                     Trang_thai = 'False'
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 # if (('Transaction End' in l) == True):  # Kết thúc giao dịch
+                 if m == len(d):  # Kết thúc giao dịch
+                     m = 0
+                     Loai_GD = 0
+                     Menh_gia_1 = 0
+                     Menh_gia_2 = 0
+                     Counter = 0
+                     CARD_NO = 0
+                     MSN = 0
+                     Collect = 0
+                     Time = 0
+                     Trang_thai = 0
+
+     df = pd.DataFrame([['Chu kỳ', 'Thời gian bắt đầu GD', 'MSN', 'Card No', 'Loại GD', '10k', '20k',
+                         '50k', '100k', '200k', '500k', 'Reject', 'Counter', 'Trạng thái']])
+     # print(DS_GD)
+     for i in range(len(DS_GD)):  # đưa danh sách GD vào DataFrame
+         df_new_row = pd.DataFrame([DS_GD[i]])
+         df = pd.concat([df, df_new_row])
+     # df.to_excel('data2.xlsx', sheet_name='danh sách GD')      # thống kê tất cả các giao dịch vào Sheet1
+
+     year = time.localtime().tm_year
+     mon = time.localtime().tm_mon
+     if (mon <= 9):
+         mon = "0" + str(mon)
+     day = time.localtime().tm_mday
+     if (day <= 9):
+         day = '0' + str(day)
+     hour = time.localtime().tm_hour
+     if (hour <= 9):
+         hour = "0" + str(hour)
+     min = time.localtime().tm_min
+     if (min <= 9):
+         min = "0" + str(min)
+     sec = time.localtime().tm_sec
+     if (sec <= 9):
+         sec = "0" + str(sec)
+     Time = str(day) + str(mon) + str(year) + "_" + str(hour) + str(min) + str(sec)
+
+     os.makedirs(r"D:\PTCK\MBB", exist_ok=True)
+     df.to_excel(r"D:\PTCK\MBB" + "/MBB_" + Time + ".xlsx")
+
+     fl = (r"D:\PTCK\MBB" + "/MBB_" + Time + ".xlsx")
+
+     xl = win32com.client.Dispatch("Excel.Application")
+     xl.Visible = True
+     xl.Workbooks.Open(fl)
+ if (event == "RUN_VPB" and values["IN_VPB"] != ""):
+     Folder_Path_VPB = values["IN_VPB"]
+
+     os.chdir(Folder_Path_VPB)
+
+     data = []
+
+
+     def read_text_file(file_path):
+         with open(file_path, 'r') as f:
+             global data
+             data1 = f.readlines()
+             f.close()
+             data = data + data1
+             # print(data)
+
+
+     # iterate through all file
+     for file in os.listdir():
+         # Check whether file is in text format or not
+         if file.endswith(".txt"):
+             file_path = f"{Folder_Path_VPB}\{file}"
+
+             # call read text file function
+             read_text_file(file_path)
+
+     # print(data)
+     dong_Settlement = 0
+     DS_Settlement = [[1, '0']]
+     sttDS_Settlement = -1
+     list_CK = []
+     k1 = 0
+     K2 = 0
+     stt_CK = -1
+     MG = 0
+
+     for i in data:
+         K2 = K2 + 1
+         if (('---Settlement' in i) == True):
+             MG = data[K2 + 8][23:32] + data[K2 + 9][23:32] + data[K2 + 10][23:32] + data[K2 + 11][23:32]
+             print(MG)
+             break
+
+     for i in data:
+         dong_Settlement = dong_Settlement + 1
+         k1 = k1 + 1
+         if (('---Settlement' in i) == True):  # lay ra STT cac dong Settlement
+             DS_Settlement.append(['', ''])
+             sttDS_Settlement = sttDS_Settlement + 1
+             DS_Settlement[sttDS_Settlement][1] = dong_Settlement
+             DS_Settlement[(sttDS_Settlement + 1)][0] = dong_Settlement
+     DS_Settlement[(len(DS_Settlement) - 1)][1] = k1 + 1
+     # print(DS_Settlement)
+
+     for i in range(0, len(DS_Settlement)):
+         list_CK.append([])
+     for t in DS_Settlement:  # đưa các dòng trong mỗi chu kỳ vào 1 phần tử trong list
+         stt_CK = stt_CK + 1
+         start_of_Standar = t[0]
+         end_of_standar = t[1]
+         for start_of_Standar in range((start_of_Standar - 1), (end_of_standar - 1)):
+             list_CK[stt_CK].append(data[start_of_Standar])
+
+     # print(DS_Settlement)
+     # print(list_CK[0])
+     s1 = -1
+     for i in list_CK[0]:
+         s1 = s1 + 1
+         if (('Transaction Start' in i) == True):  # lấy log từ dòng Tran Start đầu tiên
+             list_CK[0] = list_CK[0][(s1 - 1):]
+             data = data[(s1 - 1):]
+             break
+     # print(list_CK[0])
+     # print(len(list_CK))
+
+     DS_Dong = []
+     for i in range(0, len(DS_Settlement)):
+         DS_Dong.append([])
+     # print(DS_Dong)
+     STT = -1
+     s = 0
+     e = 0
+
+     for U in list_CK:
+         STT = STT + 1
+         sttDS_Dong = -1
+         for u in U:  # lấy STT dòng Start transaction và End transaction
+             s = s + 1
+             e = e + 1
+             if (('Transaction Start' in u) == True):
+                 DS_Dong[STT].append(['', ''])
+                 sttDS_Dong = sttDS_Dong + 1
+                 DS_Dong[STT][sttDS_Dong][0] = s
+                 e1 = 0
+             if (('Transaction End' in u) == True):
+                 if e1 == 0:
+                     DS_Dong[STT][sttDS_Dong][1] = e
+                 e1 = e1 + 1
+                 if e1 == 2:
+                     DS_Dong[STT].append(['', ''])
+                     sttDS_Dong = sttDS_Dong + 1
+                     DS_Dong[STT][sttDS_Dong][0] = ''
+                     DS_Dong[STT][sttDS_Dong][1] = e
+
+     # print(DS_Dong)
+
+     if DS_Dong[-1][-1][1] == '':
+         DS_Dong[-1][-1][1] = e  # Nếu GD cuối cùng k có Tran End thì lấy dòng cuối cùng làm Tran End
+
+     # if DS_Dong[0][0][0] == '':
+
+     i1 = 0
+     j1 = 0
+     for i in DS_Dong:
+         i1 = i1 + 1
+         for j in i:
+             j1 = j1 + 1
+             if j[1] == '':
+                 DS_Dong[i1 - 1][j1 - 1][1] = DS_Dong[i1 - 1][j1][
+                                                  0] - 1  # nếu GD không có dòng Tran End thì lấy dòng Tran Start của GD sau đó làm Tran End
+             if j[0] == '':
+                 DS_Dong[i1 - 1][j1 - 1][0] = DS_Dong[i1 - 1][j1 - 2][1] + 1  # GD không có dong Tran Start
+
+             if j1 == len(DS_Dong[i1 - 1]):  # reset biến đếm j1 khi sang chu kỳ tiếp theo
+                 j1 = 0
+
+     # print(DS_Dong)
+
+     DS = []
+     for i in range(0, len(DS_Settlement)):
+         DS.append([])
+     # print(DS)
+     STT1 = -1
+     for v in DS_Dong:  # đưa các giao dịch vào list
+         STT1 = STT1 + 1
+         sttDS = -1
+         for ds in v:  # tách từng giao dịch vào list
+             sttDS = sttDS + 1
+             #        print(sttDS)
+             if (len(ds) == 2):
+                 #            print(ds)
+                 SoBatDau = ds[0]
+                 SoKetThuc = ds[1]
+                 DS[STT1].append([])
+                 #            print(ds)
+                 for SoBatDau in range((SoBatDau - 2), SoKetThuc):
+                     DS[STT1][sttDS].append(data[SoBatDau])
+     #           print(SoBatDau)
+
+     # print(DS[1][2])
+
+     DS_GD = []
+     Chu_Ky = 0
+     k = 0
+     m = 0
+     Loai_GD = 0
+     Menh_gia_1 = 0
+     Menh_gia_2 = 0
+     Counter = 0
+     Collect = 0
+     df = pd.DataFrame([['Chu kỳ', 'Thời gian bắt đầu GD', 'MSN', 'Card No', 'Loại GD', '10k', '20k',
+                         '50k', '100k', '200k', '500k', 'Reject', 'Counter', 'Trạng thái']])
+
+     for ds in DS:
+         Chu_Ky = Chu_Ky + 1
+         for d in ds:  # đọc từng giao dịch
+             DS_GD.append(['', '', '', ''])
+             k = k + 1
+             DS_GD[k - 1][0] = Chu_Ky
+             #      print(d)
+             #       print(len(d))
+             for l in d:  # tìm ra GD dùng thẻ và hiển thị số thẻ
+
+                 if ((('Card Number :' in l) == True)):
+                     CARD_NO = l[27:-1]
+                     DS_GD[k - 1][3] = CARD_NO
+                     #              print(CARD_NO)
+                     break
+
+             for l in d:  # tìm ra giao dịch không dùng thẻ
+                 if ((('Non Card Transaction' in l) == True)):
+                     CARD_NO = 'Non Card Transaction'
+                     DS_GD[k - 1][3] = CARD_NO
+                     break
+
+             for l in d:
+                 m = m + 1
+                 if (('Machine Sequence No' in l) == True):  # lay Machine Sequence No
+                     MSN = l[-7:-1]
+                     Time = d[m - 3][3:24]
+                     DS_GD[k - 1][1] = Time
+                     DS_GD[k - 1][2] = int(MSN)
+
+                 if (('Stored banknote :\n' in l) == True):  # nộp tiền thành công
+                     Loai_GD = 'nộp tiền'
+                     Trang_thai = 'Succeeded'
+                     Menh_gia_1 = d[m]
+                     Menh_gia_2 = d[m + 1]
+                     Counter = d[m + 2]
+                     DS_GD[k - 1].append(Loai_GD)
+                     DS_GD[k - 1].append(int(Menh_gia_1[14:19]))
+                     DS_GD[k - 1].append(int(Menh_gia_1[29:34]))
+                     DS_GD[k - 1].append(int(Menh_gia_1[44:]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[14:19]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[29:34]))
+                     DS_GD[k - 1].append(int(Menh_gia_2[44:]))
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append(Counter)
+                     DS_GD[k - 1].append(Trang_thai)
+
+                 if (('in cassette : Succeeded' in l) == True):  # GD rút tiền thành công
+                     Loai_GD = 'rút tiền'
+                     Trang_thai = 'Succeeded'
+                     Menh_gia_1 = d[m]
+                     Menh_gia_2 = d[m + 1]
+                     Counter = d[m + 2]
+                     DS_GD[k - 1].append(Loai_GD)
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     # DS_GD[k - 1].append('')
+                     if (MG == 'VND500000VND100000VND50000 -        '):
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 50k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 100k
+                         DS_GD[k - 1].append('')  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_2[14:]))  # reject
+                         DS_GD[k - 1].append(Counter)
+
+                     if (MG == 'VND500000VND500000VND500000VND200000'):
+                         DS_GD[k - 1].append('')  # 50k
+                         DS_GD[k - 1].append('')  # 100k
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # reject
+                         DS_GD[k - 1].append(Menh_gia_2)  # counter
+
+                     if (MG == 'VND500000VND200000VND100000VND50000 '):
+                         DS_GD[k - 1].append(int(Menh_gia_1[14:19]))  # 50k
+                         DS_GD[k - 1].append(int(Menh_gia_1[29:34]))  # 100k
+                         DS_GD[k - 1].append(int(Menh_gia_1[44:]))  # 200k
+                         DS_GD[k - 1].append(int(Menh_gia_2[14:19]))  # 500k
+                         DS_GD[k - 1].append(int(Menh_gia_2[29:34]))  # reject
+                         DS_GD[k - 1].append(Counter)
+
+                     DS_GD[k - 1].append(Trang_thai)
+
+                 if (('Error event: ' in l) == True):  # GD rút tiền k thành công
+                     Trang_thai = 'False'
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 if (('Fail' in l) == True):
+                     Trang_thai = 'False'
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1].append('')
+                     DS_GD[k - 1][13] = (Trang_thai)
+
+                 # if (('Transaction End' in l) == True):  # Kết thúc giao dịch
+                 if m == len(d):  # Kết thúc giao dịch
+                     m = 0
+                     Loai_GD = 0
+                     Menh_gia_1 = 0
+                     Menh_gia_2 = 0
+                     Counter = 0
+                     CARD_NO = 0
+                     MSN = 0
+                     Collect = 0
+                     Time = 0
+                     Trang_thai = 0
+
+     n = -1  # cắt dòng các giao dịch có nhiều lần nộp rút
+     for i in DS_GD:
+         n = n + 1
+         if (len(i) > 14):
+             So_phan_tu = (len(i) - 14) / 10
+             B = [i[0:14]]
+             C = [i[0], i[1], i[2], i[3]]
+             for j in range(int(So_phan_tu)):
+                 B.append(i[(10 * (j + 1) + 4):(10 * (j + 1) + 14)])
+             for j in B:
+                 if (len(j) == 10):
+                     j[0:0] = C
+             DS_GD.remove(i)
+             DS_GD[n:n] = B
+     # print(DS_GD)
+
+     for i in range(len(DS_GD)):  # đưa danh sách GD vào DataFrame
+         df_new_row = pd.DataFrame([DS_GD[i]])
+         df = pd.concat([df, df_new_row])
+
+     year = time.localtime().tm_year
+     mon = time.localtime().tm_mon
+     if (mon <= 9):
+         mon = "0" + str(mon)
+     day = time.localtime().tm_mday
+     if (day <= 9):
+         day = '0' + str(day)
+     hour = time.localtime().tm_hour
+     if (hour <= 9):
+         hour = "0" + str(hour)
+     min = time.localtime().tm_min
+     if (min <= 9):
+         min = "0" + str(min)
+     sec = time.localtime().tm_sec
+     if (sec <= 9):
+         sec = "0" + str(sec)
+     Time = str(day) + str(mon) + str(year) + "_" + str(hour) + str(min) + str(sec)  # name of file excel
+
+     os.makedirs(r"D:\PTCK\VPB", exist_ok=True)
+     df.to_excel(r"D:\PTCK\VPB" + "/VPB_" + Time + ".xlsx")  # import data to excel
+
+     fl = (r"D:\PTCK\VPB" + "/VPB_" + Time + ".xlsx")
+     xl = win32com.client.Dispatch("Excel.Application")
+     xl.Visible = True
+     xl.Workbooks.Open(fl)  # open file excel after success
+
