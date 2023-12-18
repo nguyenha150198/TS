@@ -142,6 +142,7 @@ while True:
                      DS_Dong[STT][sttDS_Dong][1] = e
 
      # print(DS_Dong)
+     DS_Dong = [i for i in DS_Dong if i != []]
 
      if DS_Dong[-1][-1][1] == '':
          DS_Dong[-1][-1][1] = e  # Nếu GD cuối cùng k có Tran End thì lấy dòng cuối cùng làm Tran End
@@ -470,6 +471,7 @@ while True:
                      DS_Dong[STT][sttDS_Dong][1] = e
 
      # print(DS_Dong)
+     DS_Dong = [i for i in DS_Dong if i != []]
 
      if DS_Dong[-1][-1][1] == '':
          DS_Dong[-1][-1][1] = e  # Nếu GD cuối cùng k có Tran End thì lấy dòng cuối cùng làm Tran End
@@ -796,7 +798,15 @@ while True:
                      DS_Dong[STT][sttDS_Dong][0] = ''
                      DS_Dong[STT][sttDS_Dong][1] = e
 
-     # print(DS_Dong)
+     '''cl = -1
+     for i in DS_Dong:
+         cl = cl + 1
+         if i == []:
+             DS_Dong.pop(cl)'''
+
+#print([s for s in l if s != 'Bob']
+     DS_Dong = [i for i in DS_Dong if i != []]
+     #print(DS_Dong)
 
      if DS_Dong[-1][-1][1] == '':
          DS_Dong[-1][-1][1] = e  # Nếu GD cuối cùng k có Tran End thì lấy dòng cuối cùng làm Tran End
@@ -1029,4 +1039,3 @@ while True:
      xl = win32com.client.Dispatch("Excel.Application")
      xl.Visible = True
      xl.Workbooks.Open(fl)  # open file excel after success
-
